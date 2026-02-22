@@ -7,6 +7,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface HNStoryCell : UITableViewCell
 
 @property (nonatomic, strong) HNItem *item;
+@property (nonatomic, copy) void (^onTranslationCompleted)(void);
 
 + (NSString *)reuseIdentifier;
 

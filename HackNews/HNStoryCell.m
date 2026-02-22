@@ -79,6 +79,7 @@
     _scoreLabel.translatesAutoresizingMaskIntoConstraints = NO;
     _scoreLabel.font = [UIFont systemFontOfSize:12 weight:UIFontWeightBold];
     _scoreLabel.textColor = [UIColor systemOrangeColor];
+    [_scoreLabel setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisVertical];
     [_containerActionView addSubview:_scoreLabel];
     
     // Meta (Author • Time)
@@ -86,6 +87,7 @@
     _metaLabel.translatesAutoresizingMaskIntoConstraints = NO;
     _metaLabel.font = [UIFont systemFontOfSize:12 weight:UIFontWeightRegular];
     _metaLabel.textColor = [UIColor tertiaryLabelColor];
+    [_metaLabel setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisVertical];
     [_containerActionView addSubview:_metaLabel];
     
     // Comments
@@ -93,6 +95,7 @@
     _commentLabel.translatesAutoresizingMaskIntoConstraints = NO;
     _commentLabel.font = [UIFont systemFontOfSize:12 weight:UIFontWeightMedium];
     _commentLabel.textColor = [UIColor secondaryLabelColor];
+    [_commentLabel setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisVertical];
     [_containerActionView addSubview:_commentLabel];
 
     // Constraints
@@ -188,6 +191,9 @@
                         if (weakSelf.item == item) {
                             weakSelf.translatedTitleLabel.text = translatedText;
                             [weakSelf setNeedsLayout];
+                            if (weakSelf.onTranslationCompleted) {
+                                weakSelf.onTranslationCompleted();
+                            }
                         }
                     });
                 }

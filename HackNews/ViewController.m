@@ -31,10 +31,21 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.title = LS(@"title_top");
+    HNFeedType savedFeedType = (HNFeedType)[[NSUserDefaults standardUserDefaults] integerForKey:@"AppSelectedFeedType"];
+    self.currentFeedType = savedFeedType;
+    
+    switch (savedFeedType) {
+        case HNFeedTypeNew: self.title = LS(@"title_new"); break;
+        case HNFeedTypeBest: self.title = LS(@"title_best"); break;
+        case HNFeedTypeShow: self.title = LS(@"title_show"); break;
+        case HNFeedTypeAsk: self.title = LS(@"title_ask"); break;
+        case HNFeedTypeJob: self.title = LS(@"title_job"); break;
+        case HNFeedTypeTop:
+        default: self.title = LS(@"title_top"); break;
+    }
+    
     self.view.backgroundColor = [UIColor systemBackgroundColor];
     self.stories = [NSMutableArray array];
-    self.currentFeedType = HNFeedTypeTop;
     
     // Initialize refresh control early
     self.refreshControl = [[UIRefreshControl alloc] init];
@@ -107,6 +118,9 @@
     
     self.currentFeedType = type;
     self.title = title;
+    
+    [[NSUserDefaults standardUserDefaults] setInteger:type forKey:@"AppSelectedFeedType"];
+    [[NSUserDefaults standardUserDefaults] synchronize];
     
     // 滚动到顶部
     if (self.stories.count > 0 && [self.tableView numberOfSections] > 0 && [self.tableView numberOfRowsInSection:0] > 0) {
@@ -230,6 +244,16 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     HNStoryCell *cell = [tableView dequeueReusableCellWithIdentifier:[HNStoryCell reuseIdentifier] forIndexPath:indexPath];
     cell.item = self.stories[indexPath.row];
+    
+    __weak typeof(self) weakSelf = self;
+    __weak typeof(cell) weakCell = cell;
+    cell.onTranslationCompleted = ^{
+        // 告诉 tableView 重新计算高度，但不重新加载 cell
+        if (weakCell && [weakSelf.tableView.visibleCells containsObject:weakCell]) {
+            [weakSelf.tableView beginUpdates];
+            [weakSelf.tableView endUpdates];
+        }
+    };
     
     // Check if we are near the bottom to trigger paging
     if (indexPath.row == self.stories.count - 1 && !self.isLoading && self.stories.count < self.topStoryIds.count) {
