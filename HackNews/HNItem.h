@@ -6,6 +6,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, assign) NSInteger itemId;
 @property (nonatomic, copy) NSString *title;
+@property (nonatomic, copy, nullable) NSString *translatedTitle; // New property
 @property (nonatomic, copy) NSString *by;
 @property (nonatomic, assign) NSInteger score;
 @property (nonatomic, assign) NSTimeInterval time;

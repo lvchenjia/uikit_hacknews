@@ -2,10 +2,13 @@
 #import "HNItem.h"
 #import "LanguageManager.h"
 
+#import "HNTranslationManager.h"
+
 @interface HNStoryCell ()
 
 @property (nonatomic, strong) UIView *containerActionView;
 @property (nonatomic, strong) UILabel *titleLabel;
+@property (nonatomic, strong) UILabel *translatedTitleLabel; // New
 @property (nonatomic, strong) UILabel *domainLabel;
 @property (nonatomic, strong) UILabel *metaLabel;
 @property (nonatomic, strong) UILabel *scoreLabel;
@@ -61,6 +64,14 @@
     _titleLabel.textColor = [UIColor labelColor];
     _titleLabel.numberOfLines = 0;
     [_containerActionView addSubview:_titleLabel];
+
+    // Translated Title
+    _translatedTitleLabel = [[UILabel alloc] init];
+    _translatedTitleLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    _translatedTitleLabel.font = [UIFont systemFontOfSize:15 weight:UIFontWeightRegular];
+    _translatedTitleLabel.textColor = [UIColor secondaryLabelColor];
+    _translatedTitleLabel.numberOfLines = 0;
+    [_containerActionView addSubview:_translatedTitleLabel];
     
     // Score (Orange)
     _scoreLabel = [[UILabel alloc] init];
@@ -102,8 +113,16 @@
         [_titleLabel.leadingAnchor constraintEqualToAnchor:_containerActionView.leadingAnchor constant:padding],
         [_titleLabel.trailingAnchor constraintEqualToAnchor:_containerActionView.trailingAnchor constant:-padding],
         
-        // Score (Bottom Left)
-        [_scoreLabel.topAnchor constraintEqualToAnchor:_titleLabel.bottomAnchor constant:12],
+        // Translated Title
+        [_translatedTitleLabel.topAnchor constraintEqualToAnchor:_titleLabel.bottomAnchor constant:4],
+        [_translatedTitleLabel.leadingAnchor constraintEqualToAnchor:_containerActionView.leadingAnchor constant:padding],
+        [_translatedTitleLabel.trailingAnchor constraintEqualToAnchor:_containerActionView.trailingAnchor constant:-padding],
+        
+        // Score (Bottom Left) -> Variable constraint logic needed if translated title is hidden?
+        // Actually, if text is empty and numberOfLines=0, height is 0. But separate padding remains?
+        // Let's rely on bottom spacing.
+        [_scoreLabel.topAnchor constraintEqualToAnchor:_translatedTitleLabel.bottomAnchor constant:12],
+        
         [_scoreLabel.leadingAnchor constraintEqualToAnchor:_containerActionView.leadingAnchor constant:padding],
         [_scoreLabel.bottomAnchor constraintEqualToAnchor:_containerActionView.bottomAnchor constant:-padding],
         
@@ -114,9 +133,6 @@
         // Comments (Bottom Right)
         [_commentLabel.centerYAnchor constraintEqualToAnchor:_scoreLabel.centerYAnchor],
         [_commentLabel.trailingAnchor constraintEqualToAnchor:_containerActionView.trailingAnchor constant:-padding],
-        
-        // Priority for compression to keep title visible
-        [_titleLabel.bottomAnchor constraintLessThanOrEqualToAnchor:_scoreLabel.topAnchor constant:-12]
     ]];
 }
 
@@ -124,6 +140,47 @@
     _item = item;
     
     _titleLabel.text = item.title;
+    
+    // Translation Logic
+    LanguageType currentLang = [LanguageManager sharedManager].currentLanguage;
+    NSString *systemLangPrefix = [[NSLocale currentLocale].languageCode lowercaseString];
+    BOOL isEnglishContext = (currentLang == LanguageTypeEnglish) || (currentLang == LanguageTypeSystem && [systemLangPrefix hasPrefix:@"en"]);
+    
+    // Only translate if NOT English context
+    if (!isEnglishContext) {
+        _translatedTitleLabel.hidden = NO;
+        if (item.translatedTitle) {
+            _translatedTitleLabel.text = item.translatedTitle;
+        } else {
+            _translatedTitleLabel.text = @"Translating...";
+            
+            // Determine target lang code
+            NSString *targetCode = @"zh-CN"; 
+            if (currentLang == LanguageTypeChinese) {
+                targetCode = @"zh-CN";
+            } else if (currentLang == LanguageTypeSystem) {
+                if ([systemLangPrefix hasPrefix:@"zh"]) targetCode = @"zh-CN";
+                // Add more logic if needed
+            }
+            
+            __weak typeof(self) weakSelf = self;
+            [[HNTranslationManager sharedManager] translateText:item.title toLanguage:targetCode completion:^(NSString * _Nullable translatedText, NSError * _Nullable error) {
+                if (translatedText) {
+                    item.translatedTitle = translatedText;
+                    // Check if cell is still showing the same item
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        if (weakSelf.item == item) {
+                            weakSelf.translatedTitleLabel.text = translatedText;
+                            [weakSelf setNeedsLayout];
+                        }
+                    });
+                }
+            }];
+        }
+    } else {
+        _translatedTitleLabel.text = nil;
+        _translatedTitleLabel.hidden = YES;
+    }
     
     // Domain logic
     if (item.url) {
