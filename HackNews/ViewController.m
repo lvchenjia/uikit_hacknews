@@ -9,6 +9,8 @@
 #import "HNItem.h"
 #import "HNStoryCell.h"
 #import "HNNetworkManager.h"
+#import "SettingsViewController.h"
+#import "LanguageManager.h"
 #import <SafariServices/SafariServices.h>
 
 @interface ViewController () <UITableViewDelegate, UITableViewDataSource>
@@ -29,7 +31,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.title = @"热门文章";
+    self.title = LS(@"title_top");
     self.view.backgroundColor = [UIColor systemBackgroundColor];
     self.stories = [NSMutableArray array];
     self.currentFeedType = HNFeedTypeTop;
@@ -39,6 +41,7 @@
     [self.refreshControl addTarget:self action:@selector(fetchStories) forControlEvents:UIControlEventValueChanged];
     
     [self setupMenuButton];
+    [self setupSettingsButton];
     
     [self setupTableView];
     [self setupFooterLoading];
@@ -46,32 +49,43 @@
     [self startLoading];
 }
 
+- (void)setupSettingsButton {
+    UIBarButtonItem *settingsItem = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"gear"] style:UIBarButtonItemStylePlain target:self action:@selector(openSettings)];
+    self.navigationItem.leftBarButtonItem = settingsItem;
+}
+
+- (void)openSettings {
+    SettingsViewController *vc = [[SettingsViewController alloc] init];
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
 // 配置导航栏右上角的分类切换按钮
 - (void)setupMenuButton {
     __weak typeof(self) weakSelf = self;
-    UIAction *topAction = [UIAction actionWithTitle:@"热门" image:[UIImage systemImageNamed:@"flame"] identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
-        [weakSelf switchFeedType:HNFeedTypeTop title:@"热门文章"];
+    UIAction *topAction = [UIAction actionWithTitle:LS(@"tab_top") image:[UIImage systemImageNamed:@"flame"] identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
+        [weakSelf switchFeedType:HNFeedTypeTop title:LS(@"title_top")];
     }];
-    UIAction *newAction = [UIAction actionWithTitle:@"最新" image:[UIImage systemImageNamed:@"clock"] identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
-        [weakSelf switchFeedType:HNFeedTypeNew title:@"最新文章"];
+    UIAction *newAction = [UIAction actionWithTitle:LS(@"tab_new") image:[UIImage systemImageNamed:@"clock"] identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
+        [weakSelf switchFeedType:HNFeedTypeNew title:LS(@"title_new")];
     }];
-    UIAction *bestAction = [UIAction actionWithTitle:@"精华" image:[UIImage systemImageNamed:@"star"] identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
-        [weakSelf switchFeedType:HNFeedTypeBest title:@"精华文章"];
+    UIAction *bestAction = [UIAction actionWithTitle:LS(@"tab_best") image:[UIImage systemImageNamed:@"star"] identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
+        [weakSelf switchFeedType:HNFeedTypeBest title:LS(@"title_best")];
     }];
-    UIAction *showAction = [UIAction actionWithTitle:@"展示" image:[UIImage systemImageNamed:@"eye"] identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
-        [weakSelf switchFeedType:HNFeedTypeShow title:@"Show HN"];
+    UIAction *showAction = [UIAction actionWithTitle:LS(@"tab_show") image:[UIImage systemImageNamed:@"eye"] identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
+        [weakSelf switchFeedType:HNFeedTypeShow title:LS(@"title_show")];
     }];
-    UIAction *askAction = [UIAction actionWithTitle:@"问答" image:[UIImage systemImageNamed:@"bubble.left.and.bubble.right"] identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
-        [weakSelf switchFeedType:HNFeedTypeAsk title:@"Ask HN"];
+    UIAction *askAction = [UIAction actionWithTitle:LS(@"tab_ask") image:[UIImage systemImageNamed:@"bubble.left.and.bubble.right"] identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
+        [weakSelf switchFeedType:HNFeedTypeAsk title:LS(@"title_ask")];
     }];
-    UIAction *jobAction = [UIAction actionWithTitle:@"招聘" image:[UIImage systemImageNamed:@"briefcase"] identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
-        [weakSelf switchFeedType:HNFeedTypeJob title:@"招聘信息"];
+    UIAction *jobAction = [UIAction actionWithTitle:LS(@"tab_job") image:[UIImage systemImageNamed:@"briefcase"] identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
+        [weakSelf switchFeedType:HNFeedTypeJob title:LS(@"title_job")];
     }];
     
-    UIMenu *menu = [UIMenu menuWithTitle:@"选择分类" children:@[topAction, newAction, bestAction, showAction, askAction, jobAction]];
+    UIMenu *menu = [UIMenu menuWithTitle:LS(@"menu_title") children:@[topAction, newAction, bestAction, showAction, askAction, jobAction]];
     UIBarButtonItem *menuItem = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"line.3.horizontal.decrease.circle"] menu:menu];
     self.navigationItem.rightBarButtonItem = menuItem;
 }
+
 
 // 切换当前的数据源类型
 - (void)switchFeedType:(HNFeedType)type title:(NSString *)title {

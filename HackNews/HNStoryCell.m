@@ -1,5 +1,6 @@
 #import "HNStoryCell.h"
 #import "HNItem.h"
+#import "LanguageManager.h"
 
 @interface HNStoryCell ()
 
@@ -9,6 +10,8 @@
 @property (nonatomic, strong) UILabel *metaLabel;
 @property (nonatomic, strong) UILabel *scoreLabel;
 @property (nonatomic, strong) UILabel *commentLabel;
+
+- (void)updateShadow;
 
 @end
 
@@ -37,10 +40,9 @@
     _containerActionView.layer.masksToBounds = NO;
     
     // Shadow
-    _containerActionView.layer.shadowColor = [UIColor blackColor].CGColor;
-    _containerActionView.layer.shadowOpacity = 0.05;
     _containerActionView.layer.shadowOffset = CGSizeMake(0, 2);
     _containerActionView.layer.shadowRadius = 4;
+    [self updateShadow];
     
     [self.contentView addSubview:_containerActionView];
     
@@ -138,16 +140,16 @@
     NSTimeInterval timeSince = now - item.time;
     NSString *timeString = @"";
     if (timeSince < 60) {
-        timeString = @"刚刚";
+        timeString = LS(@"time_just_now");
     } else if (timeSince < 3600) {
-        timeString = [NSString stringWithFormat:@"%ld分钟前", (long)(timeSince / 60)];
+        timeString = [NSString stringWithFormat:@"%ld%@", (long)(timeSince / 60), LS(@"time_m")];
     } else if (timeSince < 86400) {
-        timeString = [NSString stringWithFormat:@"%ld小时前", (long)(timeSince / 3600)];
+        timeString = [NSString stringWithFormat:@"%ld%@", (long)(timeSince / 3600), LS(@"time_h")];
     } else {
-        timeString = [NSString stringWithFormat:@"%ld天前", (long)(timeSince / 86400)];
+        timeString = [NSString stringWithFormat:@"%ld%@", (long)(timeSince / 86400), LS(@"time_d")];
     }
     
-    _metaLabel.text = [NSString stringWithFormat:@"%@ • %@", item.by, timeString];
+    _metaLabel.text = [NSString stringWithFormat:@"%@%@ • %@", LS(@"author_prefix"), item.by, timeString];
     
     _commentLabel.text = [NSString stringWithFormat:@"💬 %ld", (long)item.descendants];
 }
@@ -158,6 +160,33 @@
     [UIView animateWithDuration:0.2 animations:^{
         self.containerActionView.transform = highlighted ? CGAffineTransformMakeScale(0.97, 0.97) : CGAffineTransformIdentity;
     }];
+}
+
+#pragma mark - Theme Management
+
+- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    [super traitCollectionDidChange:previousTraitCollection];
+    
+    // 如果颜色外观发生变化（比如从浅色切换到深色），则更新阴影
+    if ([self.traitCollection hasDifferentColorAppearanceComparedToTraitCollection:previousTraitCollection]) {
+        [self updateShadow];
+    }
+}
+
+- (void)updateShadow {
+    // 根据当前的模式设置阴影或边框
+    if (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) {
+        // Dark Mode: 阴影不可见，使用微弱的边框描边增加层次感
+        self.containerActionView.layer.shadowOpacity = 0.0;
+        self.containerActionView.layer.borderColor = [UIColor separatorColor].CGColor;
+        self.containerActionView.layer.borderWidth = 0.5;
+    } else {
+        // Light Mode: 使用阴影
+        self.containerActionView.layer.shadowColor = [UIColor blackColor].CGColor;
+        self.containerActionView.layer.shadowOpacity = 0.08;
+        self.containerActionView.layer.borderColor = [UIColor clearColor].CGColor;
+        self.containerActionView.layer.borderWidth = 0.0;
+    }
 }
 
 @end

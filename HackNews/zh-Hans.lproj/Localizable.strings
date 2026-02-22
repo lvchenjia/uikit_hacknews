@@ -1,0 +1,38 @@
+/* 
+  Localizable.strings
+  HackNews
+
+  Created by horse on 2026/2/22.
+  
+*/
+
+"tab_top" = "热门";
+"tab_new" = "最新";
+"tab_best" = "精华";
+"tab_show" = "展示";
+"tab_ask" = "问答";
+"tab_job" = "招聘";
+
+"title_top" = "热门文章";
+"title_new" = "最新文章";
+"title_best" = "精华文章";
+"title_show" = "Show HN";
+"title_ask" = "Ask HN";
+"title_job" = "招聘信息";
+
+"menu_title" = "选择分类";
+
+"time_m" = "分钟前";
+"time_h" = "小时前";
+"time_d" = "天前";
+"time_just_now" = "刚刚";
+
+"author_prefix" = "作者: ";
+
+"settings_title" = "设置";
+"settings_appearance" = "外观";
+"settings_system" = "跟随系统";
+"settings_light" = "浅色";
+"settings_dark" = "深色";
+"settings_language" = "语言";
+
