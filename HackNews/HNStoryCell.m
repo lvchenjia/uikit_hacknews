@@ -135,10 +135,25 @@
         [_commentLabel.centerYAnchor constraintEqualToAnchor:_scoreLabel.centerYAnchor],
         [_commentLabel.trailingAnchor constraintEqualToAnchor:_containerActionView.trailingAnchor constant:-padding],
     ]];
+    
+    [self updateFonts];
+}
+
+- (void)updateFonts {
+    NSInteger offset = [[NSUserDefaults standardUserDefaults] integerForKey:@"AppFontSizeOffset"];
+    
+    _titleLabel.font = [UIFont systemFontOfSize:17 + offset weight:UIFontWeightSemibold];
+    _translatedTitleLabel.font = [UIFont systemFontOfSize:15 + offset weight:UIFontWeightRegular];
+    _domainLabel.font = [UIFont systemFontOfSize:11 + offset weight:UIFontWeightMedium];
+    _scoreLabel.font = [UIFont systemFontOfSize:12 + offset weight:UIFontWeightBold];
+    _metaLabel.font = [UIFont systemFontOfSize:12 + offset weight:UIFontWeightRegular];
+    _commentLabel.font = [UIFont systemFontOfSize:12 + offset weight:UIFontWeightMedium];
 }
 
 - (void)setItem:(HNItem *)item {
     _item = item;
+    
+    [self updateFonts];
     
     _titleLabel.text = item.title;
     

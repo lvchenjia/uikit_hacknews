@@ -35,4 +35,9 @@
 "settings_light" = "浅色";
 "settings_dark" = "深色";
 "settings_language" = "语言";
+"settings_font_size" = "字体大小";
+"font_small" = "小";
+"font_normal" = "标准";
+"font_large" = "大";
+"font_extra_large" = "特大";
 

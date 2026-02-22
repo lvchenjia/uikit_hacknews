@@ -37,6 +37,14 @@
               @{@"title": @"English", @"value": @(LanguageTypeEnglish)},
               @{@"title": @"简体中文", @"value": @(LanguageTypeChinese)}
           ]
+        },
+        @{@"title": [[LanguageManager sharedManager] localizedString:@"settings_font_size"],
+          @"options": @[
+              @{@"title": [[LanguageManager sharedManager] localizedString:@"font_small"], @"value": @(-2)},
+              @{@"title": [[LanguageManager sharedManager] localizedString:@"font_normal"], @"value": @(0)},
+              @{@"title": [[LanguageManager sharedManager] localizedString:@"font_large"], @"value": @(2)},
+              @{@"title": [[LanguageManager sharedManager] localizedString:@"font_extra_large"], @"value": @(4)}
+          ]
         }
     ];
     
@@ -76,10 +84,14 @@
         NSInteger savedStyle = [[NSUserDefaults standardUserDefaults] integerForKey:@"AppAppearanceStyle"];
         UIUserInterfaceStyle optionStyle = [option[@"value"] integerValue];
         isSelected = (savedStyle == optionStyle);
-    } else {
+    } else if (indexPath.section == 1) {
         LanguageType currentLang = [LanguageManager sharedManager].currentLanguage;
         LanguageType optionLang = [option[@"value"] integerValue];
         isSelected = (currentLang == optionLang);
+    } else if (indexPath.section == 2) {
+        NSInteger savedOffset = [[NSUserDefaults standardUserDefaults] integerForKey:@"AppFontSizeOffset"];
+        NSInteger optionOffset = [option[@"value"] integerValue];
+        isSelected = (savedOffset == optionOffset);
     }
     
     cell.accessoryType = isSelected ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone;
@@ -107,11 +119,17 @@
         [[NSUserDefaults standardUserDefaults] synchronize];
         
         [tableView reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationNone];
-    } else { // Language
+    } else if (indexPath.section == 1) { // Language
         LanguageType lang = (LanguageType)value;
         [[LanguageManager sharedManager] setLanguage:lang];
         // The app will reload root view controller via notification, but we might want to alert if needed
         [tableView reloadSections:[NSIndexSet indexSetWithIndex:1] withRowAnimation:UITableViewRowAnimationNone];
+    } else if (indexPath.section == 2) { // Font Size
+        [[NSUserDefaults standardUserDefaults] setInteger:value forKey:@"AppFontSizeOffset"];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"FontSizeChangedNotification" object:nil];
+        [tableView reloadSections:[NSIndexSet indexSetWithIndex:2] withRowAnimation:UITableViewRowAnimationNone];
     }
 }
 

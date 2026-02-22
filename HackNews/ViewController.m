@@ -45,7 +45,17 @@
     [self setupTableView];
     [self setupFooterLoading];
     
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleFontSizeChange) name:@"FontSizeChangedNotification" object:nil];
+    
     [self startLoading];
+}
+
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void)handleFontSizeChange {
+    [self.tableView reloadData];
 }
 
 - (void)setupNavigationBar {
