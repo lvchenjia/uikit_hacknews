@@ -70,7 +70,8 @@
     _translatedTitleLabel.translatesAutoresizingMaskIntoConstraints = NO;
     _translatedTitleLabel.font = [UIFont systemFontOfSize:15 weight:UIFontWeightRegular];
     _translatedTitleLabel.textColor = [UIColor secondaryLabelColor];
-    _translatedTitleLabel.numberOfLines = 0;
+    _translatedTitleLabel.numberOfLines = 2; // Limit to 2 lines
+    _translatedTitleLabel.lineBreakMode = NSLineBreakByTruncatingTail;
     [_containerActionView addSubview:_translatedTitleLabel];
     
     // Score (Orange)
@@ -208,7 +209,31 @@
     
     _metaLabel.text = [NSString stringWithFormat:@"%@%@ • %@", LS(@"author_prefix"), item.by, timeString];
     
-    _commentLabel.text = [NSString stringWithFormat:@"💬 %ld", (long)item.descendants];
+    // Comment Icon (Flat style)
+    if (@available(iOS 13.0, *)) {
+        NSTextAttachment *attachment = [[NSTextAttachment alloc] init];
+        UIImage *icon = [UIImage systemImageNamed:@"bubble.right"];
+        if (icon) {
+            attachment.image = icon;
+            CGFloat fontHeight = _commentLabel.font.capHeight;
+            // Adjust bounds slightly for vertical alignment
+            attachment.bounds = CGRectMake(0, -2, fontHeight + 4, fontHeight + 2);
+            
+            NSMutableAttributedString *attrStr = [[NSMutableAttributedString alloc] initWithAttributedString:[NSAttributedString attributedStringWithAttachment:attachment]];
+            
+            // Add spacing and count
+            [attrStr appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"  %ld", (long)item.descendants]]];
+            
+            // Apply color to the whole string (including attachment if template)
+            [attrStr addAttribute:NSForegroundColorAttributeName value:[UIColor secondaryLabelColor] range:NSMakeRange(0, attrStr.length)];
+            
+            _commentLabel.attributedText = attrStr;
+        } else {
+            _commentLabel.text = [NSString stringWithFormat:@"💬 %ld", (long)item.descendants];
+        }
+    } else {
+         _commentLabel.text = [NSString stringWithFormat:@"💬 %ld", (long)item.descendants];
+    }
 }
 
 - (void)setHighlighted:(BOOL)highlighted animated:(BOOL)animated {

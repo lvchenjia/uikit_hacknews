@@ -40,8 +40,7 @@
     self.refreshControl = [[UIRefreshControl alloc] init];
     [self.refreshControl addTarget:self action:@selector(fetchStories) forControlEvents:UIControlEventValueChanged];
     
-    [self setupMenuButton];
-    [self setupSettingsButton];
+    [self setupNavigationBar];
     
     [self setupTableView];
     [self setupFooterLoading];
@@ -49,18 +48,20 @@
     [self startLoading];
 }
 
-- (void)setupSettingsButton {
+- (void)setupNavigationBar {
+    // 1. Settings on the right
     UIBarButtonItem *settingsItem = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"gear"] style:UIBarButtonItemStylePlain target:self action:@selector(openSettings)];
-    self.navigationItem.leftBarButtonItem = settingsItem;
+    self.navigationItem.rightBarButtonItem = settingsItem;
+    
+    // 2. Feed Selection on the left
+    UIBarButtonItem *feedItem = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"line.3.horizontal.decrease.circle"] menu:[self createFeedMenu]];
+    self.navigationItem.leftBarButtonItem = feedItem;
+    
+    // 3. Standard Title
+    self.navigationItem.titleView = nil;
 }
 
-- (void)openSettings {
-    SettingsViewController *vc = [[SettingsViewController alloc] init];
-    [self.navigationController pushViewController:vc animated:YES];
-}
-
-// 配置导航栏右上角的分类切换按钮
-- (void)setupMenuButton {
+- (UIMenu *)createFeedMenu {
     __weak typeof(self) weakSelf = self;
     UIAction *topAction = [UIAction actionWithTitle:LS(@"tab_top") image:[UIImage systemImageNamed:@"flame"] identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
         [weakSelf switchFeedType:HNFeedTypeTop title:LS(@"title_top")];
@@ -81,9 +82,12 @@
         [weakSelf switchFeedType:HNFeedTypeJob title:LS(@"title_job")];
     }];
     
-    UIMenu *menu = [UIMenu menuWithTitle:LS(@"menu_title") children:@[topAction, newAction, bestAction, showAction, askAction, jobAction]];
-    UIBarButtonItem *menuItem = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"line.3.horizontal.decrease.circle"] menu:menu];
-    self.navigationItem.rightBarButtonItem = menuItem;
+    return [UIMenu menuWithTitle:LS(@"menu_title") children:@[topAction, newAction, bestAction, showAction, askAction, jobAction]];
+}
+
+- (void)openSettings {
+    SettingsViewController *vc = [[SettingsViewController alloc] init];
+    [self.navigationController pushViewController:vc animated:YES];
 }
 
 

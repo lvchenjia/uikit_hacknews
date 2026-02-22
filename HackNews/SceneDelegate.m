@@ -28,6 +28,10 @@
     
     // Ensure LanguageManager is initialized early
     [LanguageManager sharedManager];
+    
+    // Restore Appearance
+    NSInteger savedStyle = [[NSUserDefaults standardUserDefaults] integerForKey:@"AppAppearanceStyle"];
+    self.window.overrideUserInterfaceStyle = (UIUserInterfaceStyle)savedStyle;
 }
 
 - (void)setupRootViewController {

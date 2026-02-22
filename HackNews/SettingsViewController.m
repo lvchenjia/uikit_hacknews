@@ -73,9 +73,9 @@
     // Checkmark logic
     BOOL isSelected = NO;
     if (indexPath.section == 0) {
-        UIUserInterfaceStyle currentStyle = self.view.window.windowScene.windows.firstObject.overrideUserInterfaceStyle;
+        NSInteger savedStyle = [[NSUserDefaults standardUserDefaults] integerForKey:@"AppAppearanceStyle"];
         UIUserInterfaceStyle optionStyle = [option[@"value"] integerValue];
-        isSelected = (currentStyle == optionStyle);
+        isSelected = (savedStyle == optionStyle);
     } else {
         LanguageType currentLang = [LanguageManager sharedManager].currentLanguage;
         LanguageType optionLang = [option[@"value"] integerValue];
@@ -101,6 +101,11 @@
         for (UIWindow *window in self.view.window.windowScene.windows) {
             window.overrideUserInterfaceStyle = style;
         }
+        
+        // Save to UserDefaults
+        [[NSUserDefaults standardUserDefaults] setInteger:style forKey:@"AppAppearanceStyle"];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+        
         [tableView reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationNone];
     } else { // Language
         LanguageType lang = (LanguageType)value;
