@@ -95,6 +95,21 @@
 
 @implementation SettingsViewController
 
+// Font size values corresponding to the 4 segments
+- (NSArray *)fontSizeValues {
+    return @[@(-4), @(0), @(4), @(8)];
+}
+
+// Font size labels
+- (NSArray *)fontSizeLabels {
+    return @[
+        [[LanguageManager sharedManager] localizedString:@"font_small"],
+        [[LanguageManager sharedManager] localizedString:@"font_normal"],
+        [[LanguageManager sharedManager] localizedString:@"font_large"],
+        [[LanguageManager sharedManager] localizedString:@"font_extra_large"]
+    ];
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.title = [[LanguageManager sharedManager] localizedString:@"settings_title"];
@@ -119,13 +134,7 @@
           ]
         },
         @{@"title": [[LanguageManager sharedManager] localizedString:@"settings_font_size"],
-          @"type": @"options",
-          @"options": @[
-              @{@"title": [[LanguageManager sharedManager] localizedString:@"font_small"], @"value": @(-4)},
-              @{@"title": [[LanguageManager sharedManager] localizedString:@"font_normal"], @"value": @(0)},
-              @{@"title": [[LanguageManager sharedManager] localizedString:@"font_large"], @"value": @(4)},
-              @{@"title": [[LanguageManager sharedManager] localizedString:@"font_extra_large"], @"value": @(8)}
-          ]
+          @"type": @"font_slider"
         },
         @{@"title": [[LanguageManager sharedManager] localizedString:@"about_title"],
           @"type": @"about"}
@@ -147,9 +156,9 @@
     NSDictionary *sectionData = self.sections[section];
     NSString *type = sectionData[@"type"];
 
-    if ([type isEqualToString:@"options"] || [type isEqualToString:@"font_options"]) {
+    if ([type isEqualToString:@"options"]) {
         return [sectionData[@"options"] count];
-    } else if ([type isEqualToString:@"about"]) {
+    } else if ([type isEqualToString:@"font_slider"] || [type isEqualToString:@"about"]) {
         return 1;
     }
     return 0;
@@ -162,6 +171,114 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSDictionary *sectionData = self.sections[indexPath.section];
     NSString *type = sectionData[@"type"];
+
+    // Font size slider cell
+    if ([type isEqualToString:@"font_slider"]) {
+        static NSString *sliderCellId = @"FontSizeSliderCell";
+        UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:sliderCellId];
+        if (!cell) {
+            cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:sliderCellId];
+            cell.selectionStyle = UITableViewCellSelectionStyleNone;
+
+            // Container view for slider and labels
+            UIView *containerView = [[UIView alloc] init];
+            containerView.translatesAutoresizingMaskIntoConstraints = NO;
+            containerView.tag = 100;
+            [cell.contentView addSubview:containerView];
+
+            // Create slider
+            UISlider *slider = [[UISlider alloc] init];
+            slider.translatesAutoresizingMaskIntoConstraints = NO;
+            slider.minimumValue = 0;
+            slider.maximumValue = 3;
+            slider.continuous = YES;
+            slider.tag = 101;
+            [slider addTarget:self action:@selector(fontSizeSliderChanged:) forControlEvents:UIControlEventValueChanged];
+            [containerView addSubview:slider];
+
+            // Create labels container for the 4 segment labels
+            UIView *labelsContainer = [[UIView alloc] init];
+            labelsContainer.translatesAutoresizingMaskIntoConstraints = NO;
+            labelsContainer.tag = 102;
+            [containerView addSubview:labelsContainer];
+
+            // Create 4 labels for the segments
+            NSArray *labels = [self fontSizeLabels];
+            for (int i = 0; i < 4; i++) {
+                UILabel *label = [[UILabel alloc] init];
+                label.text = labels[i];
+                label.font = [UIFont systemFontOfSize:12];
+                label.textColor = [UIColor secondaryLabelColor];
+                label.textAlignment = NSTextAlignmentCenter;
+                label.translatesAutoresizingMaskIntoConstraints = NO;
+                label.tag = 200 + i;
+                [labelsContainer addSubview:label];
+            }
+
+            // Layout constraints
+            [NSLayoutConstraint activateConstraints:@[
+                [containerView.topAnchor constraintEqualToAnchor:cell.contentView.topAnchor constant:8],
+                [containerView.leadingAnchor constraintEqualToAnchor:cell.contentView.leadingAnchor constant:16],
+                [containerView.trailingAnchor constraintEqualToAnchor:cell.contentView.trailingAnchor constant:-16],
+                [containerView.bottomAnchor constraintEqualToAnchor:cell.contentView.bottomAnchor constant:-8],
+
+                [slider.topAnchor constraintEqualToAnchor:containerView.topAnchor],
+                [slider.leadingAnchor constraintEqualToAnchor:containerView.leadingAnchor],
+                [slider.trailingAnchor constraintEqualToAnchor:containerView.trailingAnchor],
+                [slider.heightAnchor constraintEqualToConstant:28],
+
+                [labelsContainer.topAnchor constraintEqualToAnchor:slider.bottomAnchor constant:8],
+                [labelsContainer.leadingAnchor constraintEqualToAnchor:containerView.leadingAnchor],
+                [labelsContainer.trailingAnchor constraintEqualToAnchor:containerView.trailingAnchor],
+                [labelsContainer.bottomAnchor constraintEqualToAnchor:containerView.bottomAnchor],
+                [labelsContainer.heightAnchor constraintEqualToConstant:20]
+            ]];
+
+            // Position labels evenly across the width
+            for (int i = 0; i < 4; i++) {
+                UILabel *label = [labelsContainer viewWithTag:200 + i];
+                [NSLayoutConstraint activateConstraints:@[
+                    [label.centerYAnchor constraintEqualToAnchor:labelsContainer.centerYAnchor],
+                    [label.widthAnchor constraintEqualToAnchor:labelsContainer.widthAnchor multiplier:0.25]
+                ]];
+
+                if (i == 0) {
+                    [label.leadingAnchor constraintEqualToAnchor:labelsContainer.leadingAnchor].active = YES;
+                } else {
+                    [label.leadingAnchor constraintEqualToAnchor:[labelsContainer viewWithTag:199 + i].trailingAnchor].active = YES;
+                }
+            }
+        }
+
+        // Configure slider value based on saved preference
+        UIView *containerView = [cell.contentView viewWithTag:100];
+        UISlider *slider = (UISlider *)[containerView viewWithTag:101];
+
+        NSInteger savedOffset = [[NSUserDefaults standardUserDefaults] integerForKey:@"AppFontSizeOffset"];
+        NSArray *values = [self fontSizeValues];
+
+        // Find the index of the saved value
+        NSInteger index = 0;
+        for (int i = 0; i < values.count; i++) {
+            if ([values[i] integerValue] == savedOffset) {
+                index = i;
+                break;
+            }
+        }
+        slider.value = index;
+
+        // Get labels container
+        UIView *labelsContainer = [containerView viewWithTag:102];
+
+        // Update label colors to highlight selected
+        for (int i = 0; i < 4; i++) {
+            UILabel *label = (UILabel *)[labelsContainer viewWithTag:200 + i];
+            label.textColor = (i == index) ? [UIColor systemOrangeColor] : [UIColor secondaryLabelColor];
+            label.font = (i == index) ? [UIFont boldSystemFontOfSize:12] : [UIFont systemFontOfSize:12];
+        }
+
+        return cell;
+    }
 
     // About cell
     if ([type isEqualToString:@"about"]) {
@@ -177,7 +294,7 @@
         return cell;
     }
 
-    // Standard option cells (Appearance, Language, Font Size)
+    // Standard option cells (Appearance, Language)
     static NSString *cellId = @"SettingsCell";
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellId];
     if (!cell) {
@@ -194,13 +311,9 @@
         UIUserInterfaceStyle optionStyle = [option[@"value"] integerValue];
         isSelected = (savedStyle == optionStyle);
     } else if (indexPath.section == 1) { // Language
-        LanguageType currentLang = [LanguageManager sharedManager].currentLanguage;
+        LanguageType current = [LanguageManager sharedManager].currentLanguage;
         LanguageType optionLang = [option[@"value"] integerValue];
-        isSelected = (currentLang == optionLang);
-    } else if (indexPath.section == 2) { // Font Size
-        NSInteger savedOffset = [[NSUserDefaults standardUserDefaults] integerForKey:@"AppFontSizeOffset"];
-        NSInteger optionOffset = [option[@"value"] integerValue];
-        isSelected = (savedOffset == optionOffset);
+        isSelected = (current == optionLang);
     }
 
     cell.accessoryType = isSelected ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone;
@@ -209,6 +322,8 @@
 }
 
 #pragma mark - UITableViewDelegate
+
+
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
@@ -228,27 +343,43 @@
 
     if (indexPath.section == 0) { // Appearance
         UIUserInterfaceStyle style = (UIUserInterfaceStyle)value;
-        // Set globally for all windows in the scene
         for (UIWindow *window in self.view.window.windowScene.windows) {
             window.overrideUserInterfaceStyle = style;
         }
-
-        // Save to UserDefaults
         [[NSUserDefaults standardUserDefaults] setInteger:style forKey:@"AppAppearanceStyle"];
         [[NSUserDefaults standardUserDefaults] synchronize];
-
         [tableView reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationNone];
     } else if (indexPath.section == 1) { // Language
         LanguageType lang = (LanguageType)value;
         [[LanguageManager sharedManager] setLanguage:lang];
         [tableView reloadSections:[NSIndexSet indexSetWithIndex:1] withRowAnimation:UITableViewRowAnimationNone];
-    } else if (indexPath.section == 2) { // Font Size
-        [[NSUserDefaults standardUserDefaults] setInteger:value forKey:@"AppFontSizeOffset"];
-        [[NSUserDefaults standardUserDefaults] synchronize];
-
-        [[NSNotificationCenter defaultCenter] postNotificationName:@"FontSizeChangedNotification" object:nil];
-        [tableView reloadSections:[NSIndexSet indexSetWithIndex:2] withRowAnimation:UITableViewRowAnimationNone];
     }
+}
+
+#pragma mark - Font Size Slider
+
+- (void)fontSizeSliderChanged:(UISlider *)slider {
+    NSInteger index = (NSInteger)roundf(slider.value);
+    NSArray *values = [self fontSizeValues];
+    NSInteger value = [values[index] integerValue];
+
+    // Get the cell and containers
+    UITableViewCell *cell = (UITableViewCell *)slider.superview.superview.superview;
+    UIView *containerView = [cell.contentView viewWithTag:100];
+    UIView *labelsContainer = [containerView viewWithTag:102];
+
+    // Update label colors to highlight selected
+    for (int i = 0; i < 4; i++) {
+        UILabel *label = (UILabel *)[labelsContainer viewWithTag:200 + i];
+        label.textColor = (i == index) ? [UIColor systemOrangeColor] : [UIColor secondaryLabelColor];
+        label.font = (i == index) ? [UIFont boldSystemFontOfSize:12] : [UIFont systemFontOfSize:12];
+    }
+
+    // Save and notify
+    [[NSUserDefaults standardUserDefaults] setInteger:value forKey:@"AppFontSizeOffset"];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"FontSizeChangedNotification" object:nil];
 }
 
 @end
