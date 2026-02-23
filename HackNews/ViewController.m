@@ -281,12 +281,17 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     HNItem *item = self.stories[indexPath.row];
-    if (item.url) {
-        NSURL *url = [NSURL URLWithString:item.url];
-        if (url) {
-            SFSafariViewController *safariVC = [[SFSafariViewController alloc] initWithURL:url];
-            [self presentViewController:safariVC animated:YES completion:nil];
-        }
+    
+    NSString *urlString = item.url;
+    if (!urlString || urlString.length == 0) {
+        // 如果没有外部链接（例如 Ask HN 或纯文本帖子），则跳转到 HN 官方的评论页
+        urlString = [NSString stringWithFormat:@"https://news.ycombinator.com/item?id=%ld", (long)item.itemId];
+    }
+    
+    NSURL *url = [NSURL URLWithString:urlString];
+    if (url) {
+        SFSafariViewController *safariVC = [[SFSafariViewController alloc] initWithURL:url];
+        [self presentViewController:safariVC animated:YES completion:nil];
     }
 }
 
