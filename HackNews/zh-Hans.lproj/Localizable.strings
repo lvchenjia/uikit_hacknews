@@ -39,3 +39,7 @@
 "font_large" = "大";
 "font_extra_large" = "特大";
 
+"about_title" = "关于";
+"about_description" = "一款简洁的 Hacker News 阅读器，支持翻译功能。";
+"about_github" = "在 GitHub 上查看";
+

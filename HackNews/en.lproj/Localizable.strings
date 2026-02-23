@@ -39,3 +39,7 @@
 "font_large" = "Large";
 "font_extra_large" = "Extra Large";
 
+"about_title" = "About";
+"about_description" = "A clean Hacker News reader with translation support.";
+"about_github" = "View on GitHub";
+
