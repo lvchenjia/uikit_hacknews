@@ -228,7 +228,7 @@
         timeString = [NSString stringWithFormat:@"%ld%@", (long)(timeSince / 86400), LS(@"time_d")];
     }
     
-    _metaLabel.text = [NSString stringWithFormat:@"%@%@ • %@", LS(@"author_prefix"), item.by, timeString];
+    _metaLabel.text = [NSString stringWithFormat:@"%@ • %@", item.by, timeString];
     
     // Comment Icon (Flat style)
     if (@available(iOS 13.0, *)) {
